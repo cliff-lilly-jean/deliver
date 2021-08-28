@@ -7,3 +7,45 @@
 .map {
  height: 800px;
 }
+
+h1 {
+ text-align: center;
+ margin: 10px auto 0;
+}
+
+.input-field {
+ max-width: 500px;
+ width: 100%;
+ margin: 20px auto 50px;
+ display: block;
+ text-align: center;
+ position: relative;
+}
+
+.input-field input {
+ padding: 10px 20px;
+ width: 100%;
+ border-radius: 5px;
+ border: 2px solid #7690b2;
+ color: #88919c;
+}
+
+.dropdown {
+position: absolute;
+width: 100%;
+margin-top: 5px;
+box-shadow: 2px 2px 8px rgba(0,0,0,.1);
+border-radius: 5px;
+}
+
+.dropdown__suggestions {
+ background: #fefefe;
+ width: 100%;
+ padding: 8px;
+ cursor: pointer;
+ text-align: left;
+}
+
+.dropdown__suggestions:hover {
+ background: #efefef;
+}

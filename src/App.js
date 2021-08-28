@@ -6,19 +6,40 @@ import PlacesAutocomplete, { geocodeByAddress, getLatLng } from 'react-places-au
 const App = () => {
  const mapElement = useRef();
  const [map, setMap] = useState({});
- const [longitude, setLongitude] = useState(-80.2259);
- const [latitude, setLatitude] = useState(26.2173);
+ const [longitude, setLongitude] = useState('');
+ const [latitude, setLatitude] = useState('');
  const [address, setAddress] = useState('');
  const [coordinates, setCoordinates] = useState({ latitude: null, longitude: null });
 
  const handleAddressSelect = async (addressValue) => {
   const results = await geocodeByAddress(addressValue);
   const latLng = await getLatLng(results[0]);
+
   setAddress(addressValue);
   setCoordinates(latLng);
+
+  // Update the lat & long after a dropdown item is selected
+  let newLat = latLng.lat;
+  let newLong = latLng.lng;
+
+  setLatitude(newLat);
+  setLongitude(newLong);
+ };
+
+ // Navigator function
+ let geoLocator = async () => {
+  await navigator.geolocation.getCurrentPosition((position) => {
+   let latResult = position.coords.latitude;
+   let longResult = position.coords.longitude;
+   setLatitude(latResult);
+   setLongitude(longResult);
+  });
  };
 
  useEffect(() => {
+
+  geoLocator();
+
   let map = tt.map({
    key: process.env.REACT_APP_TOM_TOM_API_KEY,
    container: mapElement.current,
@@ -27,28 +48,30 @@ const App = () => {
     trafficFlow: true
    },
    center: [longitude, latitude],
-   zoom: 14
+   zoom: 12
   });
 
   setMap(map);
- }, []);
+
+  return () => map.remove();
+ }, [longitude, latitude]);
 
  return (
   <div className='app'>
-   <PlacesAutocomplete value={address} onChange={setAddress} onSelect={handleAddressSelect}>
+   <h1>Where to?</h1>
+   <PlacesAutocomplete className="places-autocomplete-container" value={address} onChange={setAddress} onSelect={handleAddressSelect}>
     {({ getInputProps, suggestions, getSuggestionItemProps, loading }) => (
      <div className="input-field">
-      <p>Latitude: {coordinates.lat}</p>
-      <p>Longitude: {coordinates.lng}</p>
       {/* Input field */}
-      <input type="text" {...getInputProps({ placeholder: 'Type address' })} />
+      <p>latitude: {coordinates.lat}</p>
+      <p>long: {coordinates.lng}</p>
+      <input type="text" {...getInputProps({ placeholder: 'Type a location' })} />
 
       {/* Dropdown list */}
       <div className="dropdown">
        {loading ? <div>... Loading</div> : null}
        {suggestions.map((suggestion) => {
-        const style = suggestion.active ? { backgroundColor: "#0D4745", cursor: 'pointer' } : { backgroundColor: "#fff", cursor: 'pointer' };
-        return <div {...getSuggestionItemProps(suggestion, { style })}>{suggestion.description}</div>;
+        return <div className="dropdown__suggestions" {...getSuggestionItemProps(suggestion)}>{suggestion.description}</div>;
        })}
       </div>
      </div>
