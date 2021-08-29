@@ -5,12 +5,12 @@
 }
 
 .map {
- height: 800px;
+ height: 600px;
 }
 
 h1 {
  text-align: center;
- margin: 10px auto 0;
+ margin: 30px auto 0;
 }
 
 .input-field {

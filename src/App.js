@@ -22,8 +22,12 @@ const App = () => {
   let newLat = latLng.lat;
   let newLong = latLng.lng;
 
-  setLatitude(newLat);
-  setLongitude(newLong);
+  changeLatNLong(newLat, newLong);
+ };
+
+ let changeLatNLong = (lat, long) => {
+  setLatitude(lat);
+  setLongitude(long);
  };
 
  // Navigator function
@@ -48,10 +52,14 @@ const App = () => {
     trafficFlow: true
    },
    center: [longitude, latitude],
-   zoom: 12
+   zoom: 14
   });
 
   setMap(map);
+
+  const addMarker = () => {
+
+  };
 
   return () => map.remove();
  }, [longitude, latitude]);
@@ -63,8 +71,8 @@ const App = () => {
     {({ getInputProps, suggestions, getSuggestionItemProps, loading }) => (
      <div className="input-field">
       {/* Input field */}
-      <p>latitude: {coordinates.lat}</p>
-      <p>long: {coordinates.lng}</p>
+      {/* <p>latitude: {coordinates.lat}</p>
+      <p>long: {coordinates.lng}</p> */}
       <input type="text" {...getInputProps({ placeholder: 'Type a location' })} />
 
       {/* Dropdown list */}
