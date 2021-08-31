@@ -81,6 +81,10 @@ const App = () => {
 
   addMarker();
 
+  return new Promise((resolve, reject) => {
+
+  });
+
   return () => map.remove();
  }, [longitude, latitude]);
 
