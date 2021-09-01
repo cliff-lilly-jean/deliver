@@ -66,3 +66,7 @@ border-radius: 5px;
  border-radius: 11px;
  border: 3px solid darkslategray;
 }
+
+.marker-delivery {
+ background: red;
+}
