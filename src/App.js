@@ -31,7 +31,7 @@ const App = () => {
   setLongitude(long);
  };
 
- // Navigator function
+ // NAVIGATOR FUNCTION
  let geoLocator = async () => {
   await navigator.geolocation.getCurrentPosition((position) => {
    let latResult = position.coords.latitude;
@@ -61,9 +61,12 @@ const App = () => {
   const element = document.createElement('div');
   element.className = 'marker';
 
+  // POPUP
   const popupOffset = {
    bottom: [0, -25]
   };
+
+  // MARKER
   const addMarker = () => {
    const popup = new tt.Popup({ offset: popupOffset }).setHTML('This is you');
    const marker = new tt.Marker({
@@ -76,7 +79,7 @@ const App = () => {
     setLatitude(lngLat.lat);
     setLongitude(lngLat.lng);
    });
-   marker.setPopup(popup).togglePopup();
+   marker.setPopup(popup).togglePopup(``);
   };
 
   addMarker();
@@ -103,7 +106,6 @@ const App = () => {
        })}
       </div>
      </div>
-
     )}
    </PlacesAutocomplete>
    <div ref={mapElement} className="map"></div>
