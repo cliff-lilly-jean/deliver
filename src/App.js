@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import * as tt from '@tomtom-international/web-sdk-maps';
 import * as ttapi from '@tomtom-international/web-sdk-services';
 import './App.css';
@@ -52,6 +52,25 @@ const App = () => {
   };
  };
 
+ const drawRoute = (geoJson, map) => {
+  if (map.getLayer('route')) {
+   map.removeLayer('route');
+   map.removeSource('route');
+  }
+  map.addLayer({
+   id: 'route',
+   type: 'line',
+   source: {
+    type: 'geojson',
+    data: geoJson
+   },
+   paint: {
+    'line-color': '#4a90e2',
+    'line-width': 6
+   }
+  });
+ };
+
  const addDeliveryMarker = (lngLat, map) => {
   const element = document.createElement('div');
   element.className = 'marker-delivery';
@@ -62,70 +81,51 @@ const App = () => {
    .addTo(map);
  };
 
- const drawRoute = (geoJSON, map) => {
-  if (map.getLayer('route')) {
-   map.removeLayer('route');
-   map.removeSource('route');
-  }
-  map.addLayer({
-   id: 'route',
-   type: 'line',
-   source: {
-    type: 'geojson',
-    data: geoJSON
-   },
-   paint: {
-    'line-color': 'red',
-    'line-width': 6
-   }
-  });
- };
-
  useEffect(() => {
+  geoLocator();
+
   const origin = {
    lng: longitude,
-   lat: latitude
+   lat: latitude,
   };
-
-  geoLocator();
+  const destinations = [];
 
   let map = tt.map({
    key: process.env.REACT_APP_TOM_TOM_API_KEY,
    container: mapElement.current,
    stylesVisibility: {
     trafficIncidents: true,
-    trafficFlow: true
+    trafficFlow: true,
    },
    center: [longitude, latitude],
-   zoom: 14
+   zoom: 14,
   });
-
   setMap(map);
 
-  const element = document.createElement('div');
-  element.className = 'marker';
-
-  // POPUP
-  const popupOffset = {
-   bottom: [0, -25]
-  };
-
-  // MARKER
   const addMarker = () => {
-   const popup = new tt.Popup({ offset: popupOffset }).setHTML('This is you');
+   const popupOffset = {
+    bottom: [0, -25]
+   };
+   const popup = new tt.Popup({ offset: popupOffset }).setHTML('This is you!');
+   const element = document.createElement('div');
+   element.className = 'marker';
+
    const marker = new tt.Marker({
     draggable: true,
-    element: element
+    element: element,
    })
-    .setLngLat([longitude, latitude]).addTo(map);
+    .setLngLat([longitude, latitude])
+    .addTo(map);
+
    marker.on('dragend', () => {
     const lngLat = marker.getLngLat();
-    setLatitude(lngLat.lat);
     setLongitude(lngLat.lng);
+    setLatitude(lngLat.lat);
    });
-   marker.setPopup(popup).togglePopup(``);
-  };
 
+   marker.setPopup(popup).togglePopup();
+
+  };
   addMarker();
 
   const sortDestinations = (locations) => {
@@ -133,22 +133,24 @@ const App = () => {
     return convertToPoints(destination);
    });
    const callParameters = {
-    api: process.env.REACT_APP_TOM_TOM_API_KEY,
+    key: process.env.REACT_APP_TOM_TOM_API_KEY,
     destinations: pointsForDestinations,
-    origins: [convertToPoints(origin)]
+    origins: [convertToPoints(origin)],
    };
+
    return new Promise((resolve, reject) => {
-    ttapi.services.matrixRouting(callParameters)
+    ttapi.services
+     .matrixRouting(callParameters)
      .then((matrixAPIResults) => {
       const results = matrixAPIResults.matrix[0];
       const resultsArray = results.map((result, index) => {
        return {
         location: locations[index],
-        drivingTime: result.response.routeSummary.travelTimeInSeconds
+        drivingtime: result.response.routeSummary.travelTimeInSeconds,
        };
       });
       resultsArray.sort((a, b) => {
-       return a.drivingTime - b.drivingTime;
+       return a.drivingtime - b.drivingtime;
       });
       const sortedLocations = resultsArray.map((result) => {
        return result.location;
@@ -161,19 +163,21 @@ const App = () => {
   const recalculateRoutes = () => {
    sortDestinations(destinations).then((sorted) => {
     sorted.unshift(origin);
+
     ttapi.services
      .calculateRoute({
       key: process.env.REACT_APP_TOM_TOM_API_KEY,
-      locations: sorted
-     }).then((routData) => {
-      const geoJSON = routData.toGeoJson();
-      drawRoute(geoJSON, map);
+      locations: sorted,
+     })
+     .then((routeData) => {
+      const geoJson = routeData.toGeoJson();
+      drawRoute(geoJson, map);
      });
    });
   };
 
+
   // CREATE A DESTINATIONS ARRAY AND PUSH ANYWHERE THAT IS CLICKED INTO THE ARRAY
-  const destinations = [];
   map.on('click', (e) => {
    destinations.push(e.lngLat);
    addDeliveryMarker(e.lngLat, map);
@@ -184,28 +188,27 @@ const App = () => {
  }, [longitude, latitude]);
 
  return (
-  <>{<div className='app'>
-   <h1>Where to?</h1>
-   <PlacesAutocomplete className="places-autocomplete-container" value={address} onChange={setAddress} onSelect={handleAddressSelect}>
-    {({ getInputProps, suggestions, getSuggestionItemProps, loading }) => (
-     <div className="input-field">
-      {/* Input field */}
-      {/* <p>latitude: {coordinates.lat}</p>
-      <p>long: {coordinates.lng}</p> */}
-      <input type="text" {...getInputProps({ placeholder: 'Type a location' })} />
+  <>
+   {<div className='app'>
+    <h1>Where to?</h1>
+    <PlacesAutocomplete className="places-autocomplete-container" value={address} onChange={setAddress} onSelect={handleAddressSelect}>
+     {({ getInputProps, suggestions, getSuggestionItemProps, loading }) => (
+      <div className="input-field">
+       {/* Input field */}
+       <input type="text" {...getInputProps({ placeholder: 'Type a location' })} />
 
-      {/* Dropdown list */}
-      <div className="dropdown">
-       {loading ? <div>... Loading</div> : null}
-       {suggestions.map((suggestion) => {
-        return <div className="dropdown__suggestions" {...getSuggestionItemProps(suggestion)}>{suggestion.description}</div>;
-       })}
+       {/* Dropdown list */}
+       <div className="dropdown">
+        {loading ? <div>... Loading</div> : null}
+        {suggestions.map((suggestion) => {
+         return <div className="dropdown__suggestions" {...getSuggestionItemProps(suggestion)}>{suggestion.description}</div>;
+        })}
+       </div>
       </div>
-     </div>
-    )}
-   </PlacesAutocomplete>
-   <div ref={mapElement} className="map"></div>
-  </div>}
+     )}
+    </PlacesAutocomplete>
+    <div ref={mapElement} className="map"></div>
+   </div>}
   </>
  );
 };
